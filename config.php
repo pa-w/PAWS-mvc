@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 $configDir = "../config/";
-define('MAIN_DIR', dirname(__FILE__).'/');
+define('MAIN_DIR', dirname($_SERVER['DOCUMENT_ROOT']).'/');
 define('SMARTY_DIR', MAIN_DIR.'libs/smarty/');
 define('DEFAULT_MODULE', 'home');
 define('DEFAULT_TPLDIR', MAIN_DIR."/modules/");

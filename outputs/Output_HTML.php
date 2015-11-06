@@ -64,8 +64,8 @@ class Output_HTML
 	}
 	function &init_smarty () {
 		$smarty = new Smarty();
-		$smarty->template_dir = MAIN_DIR."views/";
-		$smarty->compile_dir = MAIN_DIR."views/_compile/";
+		$smarty->setTemplateDir (MAIN_DIR."views/");
+		$smarty->setCompileDir (MAIN_DIR."views/_compile/");
 
 		return $smarty;
 	}
