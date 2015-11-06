@@ -1,3 +1,6 @@
 [submodule "libs/smarty"]
 	path = libs/smarty
 	url = git@github.com:smarty-php/smarty.git
+[submodule "htdocs/js/topojson"]
+	path = htdocs/js/topojson
+	url = https://github.com/mbostock/topojson.git
