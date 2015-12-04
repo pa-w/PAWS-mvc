@@ -24,7 +24,7 @@ SOFTWARE.
 */
 $configDir = "../config/";
 define('MAIN_DIR', dirname($_SERVER['DOCUMENT_ROOT']).'/');
-define('SMARTY_DIR', MAIN_DIR.'libs/smarty/');
+define('SMARTY_DIR', MAIN_DIR.'libs/smarty/libs/');
 define('DEFAULT_MODULE', 'home');
 define('DEFAULT_TPLDIR', MAIN_DIR."/modules/");
 define('DEFAULT_OUTPUT_FORMAT', 'html');
