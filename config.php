@@ -88,6 +88,7 @@ class RequestConfig {
 			$restParams = array();
 			$parameters = array();
 			$minRestParamCount = 0;
+			$variadic = false;
 			foreach ($act["parameters"] as $param) {
 				$optional = $param->isOptional ();
 				$name = $param->getName ();
@@ -96,9 +97,11 @@ class RequestConfig {
 				if ($values["default_available"]) {
 					$values["default"] = $param->getDefaultValue();
 				}
-				$par = array("name" => $name, "required" => !$optional, "isrest" => true ) + $values;
+				if (!$variadic) $variadic = $param->isVariadic ();
+				$par = array("name" => $name, "required" => !$optional, "isrest" => true, "variadic" => $variadic ) + $values;
 				$restParams[] = $par;
 			}
+			$methodsConfig ["variadic"] = $variadic;
 			$inMethods = $allowedMethods;
 			$restParamCount = count($restParams)+1;
 			$ignoredSignatures = array();
@@ -245,29 +248,31 @@ class RequestConfig {
 				}
 			}
 			foreach ($methodsConfig as $m => $a) {
-				foreach ($a as $i => $d) {
-					foreach ($multiDimentionalParams as $key) {
-						if (array_key_exists($key."_values", $methodsConfig[$m][$i])) {
-							require_once MAIN_DIR."libs/geshi.php";
-							$json = json_encode($methodsConfig[$m][$i][$key."_values"], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-							$geshi = new Geshi($json, 'java');
-							$geshi->set_header_type(GESHI_HEADER_PRE);
-							$geshi->enable_line_numbers(GESHI_FANCY_LINE_NUMBERS, 5);
-							$methodsConfig[$m][$i][$key."_json"] = $geshi->parse_code(); 
-							$root = array_keys($methodsConfig[$m][$i][$key])[0];
-							try { 
-								if (!empty ($root) ) {
-									require_once MAIN_DIR."/libs/Array2XML.php";
-									$xml = Array2XML::createXML($root, $methodsConfig[$m][$i][$key."_values"][$root]);
-									$xmlOut = $xml->saveXML ();
-									$geshi = new Geshi($xmlOut, 'xml');
-									$geshi->set_header_type(GESHI_HEADER_PRE);
-									$geshi->enable_line_numbers(GESHI_FANCY_LINE_NUMBERS, 5);
-									$methodsConfig[$m][$i][$key."_xml"] = $geshi->parse_code ();
-								}
-							} catch(Exception $ex) { 
-								//echo "$root<pre>".print_r($methodsConfig[$m][$i][$key."_values"], true)."<br>".print_r($ex, true)."</pre>";
-							} 
+				if (is_array ($a)) {
+					foreach ($a as $i => $d) {
+						foreach ($multiDimentionalParams as $key) {
+							if (array_key_exists($key."_values", $methodsConfig[$m][$i])) {
+								require_once MAIN_DIR."libs/geshi.php";
+								$json = json_encode($methodsConfig[$m][$i][$key."_values"], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+								$geshi = new Geshi($json, 'java');
+								$geshi->set_header_type(GESHI_HEADER_PRE);
+								$geshi->enable_line_numbers(GESHI_FANCY_LINE_NUMBERS, 5);
+								$methodsConfig[$m][$i][$key."_json"] = $geshi->parse_code(); 
+								$root = array_keys($methodsConfig[$m][$i][$key])[0];
+								try { 
+									if (!empty ($root) ) {
+										require_once MAIN_DIR."/libs/Array2XML.php";
+										$xml = Array2XML::createXML($root, $methodsConfig[$m][$i][$key."_values"][$root]);
+										$xmlOut = $xml->saveXML ();
+										$geshi = new Geshi($xmlOut, 'xml');
+										$geshi->set_header_type(GESHI_HEADER_PRE);
+										$geshi->enable_line_numbers(GESHI_FANCY_LINE_NUMBERS, 5);
+										$methodsConfig[$m][$i][$key."_xml"] = $geshi->parse_code ();
+									}
+								} catch(Exception $ex) { 
+									//echo "$root<pre>".print_r($methodsConfig[$m][$i][$key."_values"], true)."<br>".print_r($ex, true)."</pre>";
+								} 
+							}
 						}
 					}
 				}
@@ -627,8 +632,8 @@ class HTTPController {
 		$requestMethod = $_SERVER['REQUEST_METHOD'];
 		$restParams = count($this->_method_values);
 		if (!array_key_exists($requestMethod, $modulesConfig)){ return false; }
-		if (!array_key_exists($restParams, $modulesConfig[$requestMethod])) {  return false; } 
-			$cnf = $modulesConfig[$requestMethod][$restParams];
+		if (!array_key_exists($restParams, $modulesConfig[$requestMethod]) && !$modulesConfig["variadic"]) {  return false; } 
+		$cnf = @$modulesConfig[$requestMethod][$restParams];
 		if (!empty($cnf['parameters'])) {
 			foreach ($cnf['parameters'] as $param_name => $param) {
 				if (array_key_exists('request_required_param', $param) && !array_key_exists($param_name, $_REQUEST)) {
@@ -673,9 +678,9 @@ class HTTPController {
 			$path = explode("/", $pUrl['path']);
 
 			$obj->_URL = $path; 
-			$this->_module_vars = get_object_vars($obj);
 			$cname = $this->_action_name;
 			$ret = call_user_func_array(array(&$obj, $cname), $this->_method_values);
+			$this->_module_vars = get_object_vars($obj);
 			$this->_returned = $ret;
 			return $ret;
 		}

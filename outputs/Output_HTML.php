@@ -24,7 +24,9 @@ class Output_HTML
 			$actionTPL =& $this->init_smarty();
 			$this->smarty_assign_array($actionTPL, $res); 
 			$this->smarty_assign_array($actionTPL, $mod); 
-			$actionTPL->assign("content", $res);
+			if (is_string ($res)) {
+				$actionTPL->assign("content", $res);
+			}
 			$actionContent = $actionTPL->fetch($actionTPLFile);
 			$ret = $actionContent;
 		}
